@@ -1,40 +1,42 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import socket
 import threading
 import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTextEdit, QLineEdit, QPushButton, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTextEdit, QLineEdit, QPushButton, QLabel, QMenuBar, QAction, QMenu, QInputDialog
 from PyQt5.QtCore import QTimer
+import logging
+
+logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class ChatApp(QMainWindow):
     def __init__(self):
-        super(ChatApp, self).__init__()
+        super().__init__()
 
-        self.HOST = '127.0.0.1'  # Use um endereço IP válido
-        self.PORT = 12345  # Use uma porta válida
+        self.HOST = '0.0.0.0'
+        self.PORT = 12345
 
         self.is_server = False
         self.start_time = time.time()
-        self.username = ""  # Nome de usuário padrão vazio
+        self.username = ""
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.HOST, self.PORT))
 
         self.initUI()
 
     def initUI(self):
         self.server_label = QLabel("Servidor: Nenhum")
         self.runtime_label = QLabel("Tempo de Execução: 0 segundos")
-        self.username_label = QLabel("Nome:")
-        self.username_input = QLineEdit(self)
-        self.username_input.setText(self.username)
-        self.username_input.editingFinished.connect(self.update_username)
 
-        self.network_label = QLabel("Faixa de Rede:")
-        self.network_input = QLineEdit(self)
-        self.network_input.setText(self.HOST)
-        self.port_label = QLabel("Porta:")
-        self.port_input = QLineEdit(self)
-        self.port_input.setText(str(self.PORT))
+        self.menu_bar = self.menuBar()
+        self.config_menu = self.menu_bar.addMenu("Configuração")
+
+        self.name_action = QAction("Nome", self)
+        self.name_action.triggered.connect(self.set_name)
+        self.config_menu.addAction(self.name_action)
+
+        self.ip_action = QAction("Endereço IP de Destino", self)
+        self.ip_action.triggered.connect(self.set_ip)
+        self.config_menu.addAction(self.ip_action)
 
         self.messages = QTextEdit(self)
         self.messages.setReadOnly(True)
@@ -52,16 +54,10 @@ class ChatApp(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.server_label)
         layout.addWidget(self.runtime_label)
-        layout.addWidget(self.username_label)
-        layout.addWidget(self.username_input)
-        layout.addWidget(self.network_label)
-        layout.addWidget(self.network_input)
-        layout.addWidget(self.port_label)
-        layout.addWidget(self.port_input)
+        layout.addWidget(self.messages)
         layout.addWidget(self.message_label)
         layout.addWidget(self.message_input)
         layout.addWidget(self.send_button)
-        layout.addWidget(self.messages)
 
         central_widget.setLayout(layout)
 
@@ -81,15 +77,17 @@ class ChatApp(QMainWindow):
 
     def send_message(self):
         message = self.message_input.text()
-        username = self.username or self.HOST  # Use o nome de usuário ou o endereço IP
+        username = self.username or self.HOST
         self.sock.sendto(f"{username}: {message}".encode(), (self.HOST, self.PORT))
         self.message_input.clear()
+        logging.info(f"{username}: {message}")
 
     def receive_messages(self):
         while True:
             data, addr = self.sock.recvfrom(1024)
             message = data.decode()
             self.messages.append(message)
+            logging.info(message)
 
     def check_server(self):
         while True:
@@ -109,20 +107,15 @@ class ChatApp(QMainWindow):
         runtime = int(time.time() - self.start_time)
         self.runtime_label.setText(f"Tempo de Execução: {runtime} segundos")
 
-    def update_username(self):
-        self.username = self.username_input.text()
+    def set_name(self):
+        text, ok = QInputDialog.getText(self, "Nome", "Digite seu nome:")
+        if ok and text:
+            self.username = text
 
-    def update_network(self):
-        network = self.network_input.text()
-        if self.is_valid_network(network):
-            self.HOST = network
-
-    def is_valid_network(self, network):
-        try:
-            ipaddress.ip_network(network, strict=False)
-            return True
-        except ValueError:
-            return False
+    def set_ip(self):
+        text, ok = QInputDialog.getText(self, "Endereço IP de Destino", "Digite o endereço IP de destino (Opcional):")
+        if ok:
+            self.HOST = text
 
 def main():
     app = QApplication([])
@@ -131,3 +124,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
