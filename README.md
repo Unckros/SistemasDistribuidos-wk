@@ -24,7 +24,7 @@ Este projeto é um chat simples de rede implementado em Python utilizando a bibl
 
 ## Como Usar
 
-1. **Iniciar o Chat**: Execute o script `python chat.py` para iniciar o chat. A primeira instância tentará atuar como servidor.
+1. **Iniciar o Chat**: Execute o script `python main.py` para iniciar o chat. A primeira instância tentará atuar como servidor.
 2. **Conectar como Cliente**: Execute o script em outra máquina ou instância para conectar-se ao servidor existente.
 3. **Enviar Mensagens**: Use o campo de texto para digitar mensagens e clique em "Enviar" para compartilhá-las com todos na rede.
 4. **Servidor Fallback**: Se o servidor se desconectar, o cliente mais antigo (com base no timestamp de conexão) assumirá automaticamente como novo servidor.
