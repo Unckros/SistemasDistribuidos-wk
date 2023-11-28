@@ -1,0 +1,1 @@
+# Artigo do grupo
